@@ -15,26 +15,7 @@ import scipy.io as spio
 import math as math
 
 ################################################
-# HELPER VARIABLES  ***** TBA: make these available on MAF project GitHub & change call to Amarel directory (Cole lab HPC) *****
-
-dirHere = '/projects/f_mc1689_1/MovieActFlow/docs/scripts/HCP_3T_7Task/'
-
-# General ordering info relating MMP and CAB-NP
-nodeIndices = spio.loadmat(dirHere + 'nodeIndices.mat')['nodeIndices'][:,0] # 360,, network assignment (CAB-NP) numbers 1-12
-nodeOrder = (spio.loadmat(dirHere + 'nodeOrder.mat')['nodeOrder'] - 1)[:,0] # 360, node order into networks (CAB-NP) 
-
-# Left nodes: 32492 vector, left hemisphere cortical vertex labels (label = Glasser parcel, or NaN)
-ciftiFileLeft = dirHere + 'Q1-Q6_RelatedValidation210.L.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel.nii'
-leftNodes = nib.load(ciftiFileLeft).get_fdata()
-leftNodes = np.squeeze(leftNodes)
-
-# Right nodes: 32492 vector, right hemisphere cortical vertex labels (label = Glasser parcel, or NaN)
-ciftiFileRight = dirHere + 'Q1-Q6_RelatedValidation210.R.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel.nii'
-rightNodes = nib.load(ciftiFileRight).get_fdata()
-rightNodes = np.squeeze(rightNodes)
-
-# Network references: 96854 vector, whole brain vertex labels (label = CABNP network 1-12, or NaN)
-netRef = spio.loadmat(dirHere + 'netRefNew.mat')['netRefNew'] # 96854 x 1, whole brain vertex labels (label = CABNP network 1-12, or NaN); NOTE: hand fixed 
+# FIXED VARIABLES
 
 nParcels = 360
 numNets = 12
@@ -42,15 +23,35 @@ numTotal = 96854
 
 ################################################
 # FUNCTION
-def glasser_ordering(dataVectorSorted):
+def glasser_ordering(dataVectorSorted,dataDir):
     '''
     INPUT: 
         dataVectorSorted: a vector of data (e.g., activity, network metrics, contrast values, predicted activity, etc. etc.) for 360 Glasser (MMP) nodes sorted into CAB-NP networks, in size 360,
+        dataDir: a string = path of where data files can be found. If using a cloned version of https://github.com/ColeLab/ActFlowCategories these files are in ~/ActFlowCategories/example_data/
     
     OUTPUT: 
         dataVector: properly un-ordered version of dataVectorSorted, so that Glasser parcel numbers match what workbench expects (ie un-order to MMP space)
         dataVector_Vertices: same as above, at vertex level for use in workbench 
     '''
+    # HELPER FILES 
+    
+    # General ordering info relating MMP and CAB-NP
+    nodeIndices = spio.loadmat(dataDir + 'nodeIndices.mat')['nodeIndices'][:,0] # 360,, network assignment (CAB-NP) numbers 1-12
+    nodeOrder = (spio.loadmat(dataDir + 'nodeOrder.mat')['nodeOrder'] - 1)[:,0] # 360, node order into networks (CAB-NP) 
+
+    # Left nodes: 32492 vector, left hemisphere cortical vertex labels (label = Glasser parcel, or NaN)
+    ciftiFileLeft = dataDir + 'Q1-Q6_RelatedValidation210.L.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel.nii'
+    leftNodes = nib.load(ciftiFileLeft).get_fdata()
+    leftNodes = np.squeeze(leftNodes)
+
+    # Right nodes: 32492 vector, right hemisphere cortical vertex labels (label = Glasser parcel, or NaN)
+    ciftiFileRight = dataDir + 'Q1-Q6_RelatedValidation210.R.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel.nii'
+    rightNodes = nib.load(ciftiFileRight).get_fdata()
+    rightNodes = np.squeeze(rightNodes)
+
+    # Network references: 96854 vector, whole brain vertex labels (label = CABNP network 1-12, or NaN)
+    netRef = spio.loadmat(dataDir + 'netRefNew.mat')['netRefNew'] # 96854 x 1, whole brain vertex labels (label = CABNP network 1-12, or NaN); NOTE: hand fixed 
+
     ################################################
     # SET-UP
     orderedVec = nodeIndices[nodeOrder]
